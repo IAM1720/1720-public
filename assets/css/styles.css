@@ -37,5 +37,13 @@
 #countdown {
     font-size: clamp(1.4rem, 4vw, 2.5rem);
     font-weight: bold;
+
+.brand-sub {
+  font-size: 0.55em;      /* smaller than IAM */
+  letter-spacing: 0.05em; /* visually balanced */
+  display: inline-block;
+  margin-top: -2px;       /* pulls it closer to IAM */
+}
+
     color: #ffffff;
 }
