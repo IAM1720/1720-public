@@ -40,11 +40,7 @@
 
 .brand-logo-img {
   display: block;
-  height: 10px;   /* adjust until it fits perfectly */
+  height: 20px;   /* adjust this number until it fits perfectly */
   width: auto;
-}
-
-}
-
 
 }
