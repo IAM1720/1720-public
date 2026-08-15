@@ -38,33 +38,13 @@
     font-size: clamp(1.4rem, 4vw, 2.5rem);
     font-weight: bold;
 
-.brand-sub {
-  font-size: 0.55em;      /* smaller than IAM */
-  letter-spacing: 0.05em; /* visually balanced */
-  display: inline-block;
-  margin-top: -2px;       /* pulls it closer to IAM */
+.brand-logo-img {
+  display: block;
+  height: 28px;   /* adjust until it fits perfectly */
+  width: auto;
 }
 
-    color: #ffffff;
-
-.brand-mark {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;     /* centers IAM + UNION */
-  line-height: 1.05;       /* tightens vertical spacing */
-  text-align: center;      /* ensures perfect centering */
 }
 
-.brand-top {
-  font-size: 1em;          /* IAM stays full size */
-  font-weight: 800;
-}
-
-.brand-sub {
-  font-size: 0.55em;       /* UNION smaller */
-  font-weight: 700;
-  margin-top: -2px;        /* pulls UNION closer to IAM */
-  letter-spacing: 0.03em;  /* visually balanced */
-}
 
 }
