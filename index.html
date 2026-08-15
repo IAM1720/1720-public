@@ -1,66 +1,98 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IAM Local 1720 – Official Website</title>
-    <link rel="stylesheet" href="assets/css/styles.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>IAM Local 1720</title>
+  <meta name="description" content="IAM Local 1720 website">
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 </head>
 
 <body>
 
-    <!-- HERO HEADER -->
-    <header class="hero">
-        <h1>IAM Local 1720</h1>
-        <p>Serving our community with strength, solidarity, and pride.</p>
-    </header>
+<header class="site-header">
+  <a class="brand" href="index.html">
+    <span class="brand-mark">IAM</span><span>Local 1720</span>
+  </a>
+  <button class="nav-toggle" aria-label="Toggle navigation">☰</button>
 
-    <main class="content">
+  <!-- UPDATED MENU: removed broken links, kept Contact + Theme Toggle -->
+  <nav class="main-nav">
+    <a href="index.html">Home</a>
+    <a href="contact/">Contact</a>
+    <button id="themeToggle" class="theme-toggle" type="button">Dark</button>
+  </nav>
+</header>
 
-        <!-- ABOUT SECTION -->
-        <section class="card">
-            <h2>About Local 1720</h2>
-            <p>
-                IAM Local 1720 represents skilled workers across multiple industries, ensuring fair wages,
-                safe working conditions, and strong contractual protections. We are committed to supporting
-                our members and strengthening the labor movement.
-            </p>
-        </section>
+<main>
 
-        <!-- CONTACT SECTION -->
-        <section class="card">
-            <h2>Contact the Union</h2>
-            <p>
-                Need assistance or have questions? Visit our contact page for steward information,
-                leadership contacts, and ways to get in touch.
-            </p>
-            <a class="button" href="contact/index.html">Contact Page</a>
-        </section>
+<section class="hero">
+  <img
+    src="assets/images/local1720-logo.png"
+    alt="IAM Local 1720 Logo"
+    class="hero-logo"
+  >
+  <h1>Calvert City, KY</h1>
 
-        <!-- MEMBER PORTAL -->
-        <section class="card">
-            <h2>Member Portal</h2>
-            <p>
-                Active members can access contracts, wage tables, benefits, documents, and forms through
-                our secure members-only portal.
-            </p>
-            <a class="button" href="https://members.iam1720.org">Go to Member Portal</a>
-        </section>
+  <div class="countdown-container">
+    <h2>Contract Expires In</h2>
+    <div id="countdown"></div>
+  </div>
 
-        <!-- NEWS SECTION -->
-        <section class="card">
-            <h2>News & Updates</h2>
-            <p>
-                Public announcements, meeting notices, and updates from IAM Local 1720 will appear here.
-                This section will expand as new information is published.
-            </p>
-        </section>
+  <p class="hero-lede">
+    IAM Local 1720 proudly represents skilled workers in Calvert City, KY.
+    This public site provides general information, updates, and ways to get in touch.
+    Members can access protected resources through the secure portal.
+  </p>
+</section>
 
-    </main>
+<!-- UPDATED CARDS: removed internal links, added public-site content -->
+<section class="cards-grid content-shell">
 
-    <footer class="footer">
-        <p>&copy; 2026 IAM Local 1720. All rights reserved.</p>
-    </footer>
+  <a class="feature-card" href="contact/">
+    <h2>Contact the Union</h2>
+    <p>Find steward information, leadership contacts, and ways to reach IAM Local 1720.</p>
+  </a>
 
+  <a class="feature-card" href="https://members.iam1720.org">
+    <h2>Member Portal</h2>
+    <p>Active members can access contracts, wage tables, benefits, and documents through our secure portal.</p>
+  </a>
+
+  <a class="feature-card" href="#">
+    <h2>About Local 1720</h2>
+    <p>Learn more about our mission, history, and commitment to representing workers in Calvert City.</p>
+  </a>
+
+  <a class="feature-card" href="#">
+    <h2>News & Updates</h2>
+    <p>Public announcements, meeting notices, and updates will appear here as they are published.</p>
+  </a>
+
+</section>
+
+<section class="content-shell">
+  <div class="note-box">
+    <h2>About This Website</h2>
+    <p>
+      This public site provides general information about IAM Local 1720.
+      Members can access detailed contract language, wage schedules, benefits,
+      and documents through the secure members-only portal.
+    </p>
+  </div>
+</section>
+
+</main>
+
+<footer class="site-footer">
+  <p><strong>IAM Local 1720</strong></p>
+  <p>Serving our members and community with strength, solidarity, and pride.</p>
+</footer>
+
+<script src="assets/js/site.js"></script>
 </body>
 </html>
