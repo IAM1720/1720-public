@@ -1,89 +1,60 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>News and Events – IAM Local 1720</title>
-  <meta name="description" content="News IAM Local 1720">
-  <link rel="stylesheet" href="../assets/css/styles.css">
-  <link rel="icon" type="image/x-icon" href="/favicon.ico">
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-</head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Local 1720 News</title>
 
+  <link rel="stylesheet" href="/assets/css/styles.css">
+
+  <style>
+    .news-wrapper {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .news-title {
+      text-align: center;
+      font-size: 2.2rem;
+      font-weight: 800;
+      margin-bottom: 30px;
+      color: var(--text);
+    }
+
+    .news-card {
+      background: var(--card-bg);
+      color: var(--text);
+      padding: 20px;
+      margin-bottom: 25px;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+    }
+
+    .news-card h2 {
+      margin-top: 0;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .news-date {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-bottom: 12px;
+    }
+
+    .news-card img {
+      max-width: 100%;
+      border-radius: 8px;
+      margin: 15px 0;
+    }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/showdown@2.1.0/dist/showdown.min.js"></script>
+</head>
 <body>
 
-
-  
-<main>
-
-<section class="content-shell">
-  <h1>News and Events</h1>
-  
-</section>
-
-<section class="cards-grid content-shell">
-
- 
-  
-
- <!-- <div class="feature-card">
-   
-    <a  href="https://www.iamnpf.org/"
-  target="_blank"
-  rel="noopener noreferrer"
-  style="display:flex;align-items:center;gap:10px;text-decoration:none;"
->
-  <img    src="https://www.google.com/s2/favicons?domain=iamnpf.org&sz=64"
-    alt="IAM NPF"
-    width="24"
-    height="24"
-  >
-  <span><h2>IAM National Pension Fund</h2></span>
-</a><p>Login in to check your future pension benefits or start your retirement journey. 
-      If you have not logged in for several years, you may have to register again.</p>
-  </div>
-
-  <div class="feature-card">
-   <a  href="https://goiam.org/"
-  target="_blank"
-  rel="noopener noreferrer"
-  style="display:flex;align-items:center;gap:10px;text-decoration:none;"
-  >
-  <img    src="https://www.google.com/s2/favicons?domain=goiam.org&sz=64"
-    alt="IAM UNION"
-    width="24"
-    height="24"
-  >
-  <span><h2>IAM Union</h2></span>
-</a><p>International IAM Union Website</p>
-  </div>
-
-  <!--<div class="feature-card">
-    <h2>Location</h2>
-    <p>IAM Union Local 1720<br>P.O. Box 1264<br>4658 US-68<br>Calvert City, KY 42029</p>
-    <p>
-     Phone: (270)395-7195<br>-District 1888 Secretary
-    </p>
-  </div>-->
-
-</section>
-
-<section class="content-shell">
-  <div class="note-box">
-    <h2>Need Member Resources?</h2>
-    <p>
-      Member News and Information, Plant Wide Roster, Contract, and Documents are available through
-      the secure members-only portal.
-    </p>
-    <a class="button" href="https://members.iam1720.org">Go to Member Portal</a>
-  </div>
-</section>
-
-</main>
-
-
-<script src="../assets/js/site.js"></script>
-</body>
-</html>
+<div class="news-wrapper">
+  <h1 class="news-title">
