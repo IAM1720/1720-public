@@ -1,42 +1,75 @@
+async function loadSharedLayout() {
+  try {
+    const [headerResponse, footerResponse] = await Promise.all([
+      fetch('/assets/includes/header.html', { cache: 'no-store' }),
+      fetch('/assets/includes/footer.html', { cache: 'no-store' })
+    ]);
 
-const navToggle = document.querySelector('.nav-toggle');
-const mainNav = document.querySelector('.main-nav');
-if (navToggle && mainNav) navToggle.addEventListener('click', () => mainNav.classList.toggle('open'));
-const root = document.documentElement;
-const savedTheme = localStorage.getItem('theme');
-if (savedTheme) root.setAttribute('data-theme', savedTheme);
-const themeToggle = document.getElementById('themeToggle');
-function syncThemeLabel(){ if(themeToggle) themeToggle.textContent = root.getAttribute('data-theme') === 'dark' ? 'Light' : 'Dark'; }
-syncThemeLabel();
-if (themeToggle) themeToggle.addEventListener('click', () => { const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'; root.setAttribute('data-theme', next); localStorage.setItem('theme', next); syncThemeLabel(); });
-function updateCountdown() {
-    const expirationDate =
-        new Date("2027-01-08T05:59:00");
-
-    const now = new Date();
-    const difference = expirationDate - now;
-
-    if (difference <= 0) {
-        document.getElementById("countdown").innerHTML =
-            "Contract Expired";
-        return;
+    if (!headerResponse.ok || !footerResponse.ok) {
+      throw new Error('Shared layout files could not be loaded.');
     }
 
-    const days =
-        Math.floor(difference / (1000 * 60 * 60 * 24));
+    const [headerHtml, footerHtml] = await Promise.all([
+      headerResponse.text(),
+      footerResponse.text()
+    ]);
 
-    const hours =
-        Math.floor((difference / (1000 * 60 * 60)) % 24);
+    const currentHeader = document.querySelector('.site-header');
+    const currentFooter = document.querySelector('.site-footer');
 
-    const minutes =
-        Math.floor((difference / (1000 * 60)) % 60);
+    if (currentHeader) {
+      currentHeader.outerHTML = headerHtml;
+    } else {
+      document.body.insertAdjacentHTML('afterbegin', headerHtml);
+    }
 
-    const seconds =
-        Math.floor((difference / 1000) % 60);
+    if (currentFooter) {
+      currentFooter.outerHTML = footerHtml;
+    } else {
+      document.body.insertAdjacentHTML('beforeend', footerHtml);
+    }
+  } catch (error) {
+    console.error(error);
+  }
 
-    document.getElementById("countdown").innerHTML =
-        `${days}d ${hours}h ${minutes}m ${seconds}s`;
+  initializeNavigation();
 }
 
-setInterval(updateCountdown, 1000);
-updateCountdown();
+function initializeNavigation() {
+  const navToggle = document.querySelector('.nav-toggle');
+  const mainNav = document.querySelector('.main-nav');
+
+  if (!navToggle || !mainNav) return;
+
+  navToggle.addEventListener('click', () => {
+    const isOpen = mainNav.classList.toggle('open');
+    navToggle.setAttribute('aria-expanded', String(isOpen));
+  });
+}
+
+function updateCountdown() {
+  const countdown = document.getElementById('countdown');
+  if (!countdown) return;
+
+  const expirationDate = new Date('2027-01-08T05:59:00');
+  const difference = expirationDate - new Date();
+
+  if (difference <= 0) {
+    countdown.textContent = 'Contract Expired';
+    return;
+  }
+
+  const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
+  const minutes = Math.floor((difference / (1000 * 60)) % 60);
+  const seconds = Math.floor((difference / 1000) % 60);
+
+  countdown.textContent = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+}
+
+loadSharedLayout();
+
+if (document.getElementById('countdown')) {
+  updateCountdown();
+  setInterval(updateCountdown, 1000);
+}
