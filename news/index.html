@@ -1,60 +1,74 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
   <title>Local 1720 News</title>
-
-  <link rel="stylesheet" href="/assets/css/styles.css">
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    .news-wrapper {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-
-    .news-title {
-      text-align: center;
-      font-size: 2.2rem;
-      font-weight: 800;
-      margin-bottom: 30px;
-      color: var(--text);
-    }
-
-    .news-card {
-      background: var(--card-bg);
-      color: var(--text);
-      padding: 20px;
-      margin-bottom: 25px;
-      border-radius: 12px;
-      box-shadow: var(--shadow);
-      border: 1px solid var(--border);
-    }
-
-    .news-card h2 {
-      margin-top: 0;
-      font-size: 1.4rem;
-      font-weight: 700;
-      color: var(--text);
-    }
-
-    .news-date {
-      color: var(--muted);
-      font-size: 0.9rem;
-      margin-bottom: 12px;
-    }
-
-    .news-card img {
-      max-width: 100%;
-      border-radius: 8px;
-      margin: 15px 0;
-    }
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: auto; padding: 20px; }
+    .post { margin-bottom: 40px; border-bottom: 1px solid #ccc; padding-bottom: 20px; }
+    .post img { max-width: 100%; margin-top: 10px; }
   </style>
-
-  <script src="https://cdn.jsdelivr.net/npm/showdown@2.1.0/dist/showdown.min.js"></script>
 </head>
 <body>
+  <h1>Local 1720 News</h1>
+  <div id="posts"></div>
 
-<div class="news-wrapper">
-  <h1 class="news-title">
+  <script>
+    async function loadPosts() {
+      const response = await fetch('/news/');
+      const text = await response.text();
+
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(text, 'text/html');
+
+      const links = [...doc.querySelectorAll('a')]
+        .map(a => a.getAttribute('href'))
+        .filter(href => href.endsWith('.md'));
+
+      const posts = [];
+
+      for (const link of links) {
+        const md = await fetch('/news/' + link).then(r => r.text());
+
+        const fmMatch = md.match(/---([\s\S]*?)---/);
+        const fm = fmMatch ? fmMatch[1] : '';
+        const body = md.replace(fmMatch[0], '');
+
+        const fmObj = Object.fromEntries(
+          fm.split('\n')
+            .filter(line => line.includes(':'))
+            .map(line => {
+              const [key, ...rest] = line.split(':');
+              return [key.trim(), rest.join(':').trim()];
+            })
+        );
+
+        posts.push({
+          title: fmObj.title || 'Untitled',
+          date: fmObj.date || '',
+          image: fmObj.image || '',
+          body
+        });
+      }
+
+      posts.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      const container = document.getElementById('posts');
+      posts.forEach(post => {
+        const div = document.createElement('div');
+        div.className = 'post';
+        div.innerHTML = `
+          <h2>${post.title}</h2>
+          <p><em>${post.date}</em></p>
+          ${post.image ? `<img src="${post.image}" alt="">` : ''}
+          <p>${post.body}</p>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    loadPosts();
+  </script>
+</body>
+</html>
