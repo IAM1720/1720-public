@@ -118,7 +118,9 @@ a { color: inherit; }
   font-size: 1.1rem;
   margin: 0 auto;
 }
-
+.countdown-container { margin:25px 0; text-align:center; }
+.countdown-container h2 { margin-bottom:10px; font-size:1.2rem; color:#fff; }
+#countdown { font-size:clamp(1.4rem,4vw,2.5rem); font-weight:700; color:#fff; }
 /* =========================================================
    5. BUTTONS
    ========================================================= */
