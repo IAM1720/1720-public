@@ -2,73 +2,55 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Local 1720 News</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body { font-family: Arial, sans-serif; max-width: 800px; margin: auto; padding: 20px; }
-    .post { margin-bottom: 40px; border-bottom: 1px solid #ccc; padding-bottom: 20px; }
-    .post img { max-width: 100%; margin-top: 10px; }
-  </style>
+  <title>News</title>
+  <!-- Load Marked.js to parse Markdown into HTML -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
-  <h1>Local 1720 News</h1>
-  <div id="posts"></div>
+  <h1>Latest News</h1>
+  <div id="news-container">Loading news...</div>
 
   <script>
-    async function loadPosts() {
-      const response = await fetch('/news/');
-      const text = await response.text();
+    const REPO = "IAM1720/1720-public";
+    const FOLDER = "news";
 
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(text, 'text/html');
+    async function loadNews() {
+      const container = document.getElementById("news-container");
+      try {
+        // 1. Get list of files from GitHub
+        const res = await fetch(`https://api.github.com/repos/${REPO}/contents/${FOLDER}`);
+        const files = await res.json();
 
-      const links = [...doc.querySelectorAll('a')]
-        .map(a => a.getAttribute('href'))
-        .filter(href => href.endsWith('.md'));
+        // Filter for .md files
+        const mdFiles = files.filter(f => f.name.endsWith('.md')).reverse();
 
-      const posts = [];
+        if (mdFiles.length === 0) {
+          container.innerHTML = "<p>No posts found.</p>";
+          return;
+        }
 
-      for (const link of links) {
-        const md = await fetch('/news/' + link).then(r => r.text());
+        container.innerHTML = "";
 
-        const fmMatch = md.match(/---([\s\S]*?)---/);
-        const fm = fmMatch ? fmMatch[1] : '';
-        const body = md.replace(fmMatch[0], '');
+        // 2. Fetch and render each Markdown file
+        for (const file of mdFiles) {
+          const rawRes = await fetch(file.download_url);
+          const rawText = await rawRes.text();
 
-        const fmObj = Object.fromEntries(
-          fm.split('\n')
-            .filter(line => line.includes(':'))
-            .map(line => {
-              const [key, ...rest] = line.split(':');
-              return [key.trim(), rest.join(':').trim()];
-            })
-        );
+          // Split YAML frontmatter from content
+          const parts = rawText.split(/^---$/m);
+          const markdownBody = parts.length >= 3 ? parts.slice(2).join("---") : rawText;
 
-        posts.push({
-          title: fmObj.title || 'Untitled',
-          date: fmObj.date || '',
-          image: fmObj.image || '',
-          body
-        });
+          const article = document.createElement("article");
+          article.innerHTML = marked.parse(markdownBody);
+          container.appendChild(article);
+        }
+      } catch (err) {
+        container.innerHTML = "<p>Error loading news posts.</p>";
+        console.error(err);
       }
-
-      posts.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-      const container = document.getElementById('posts');
-      posts.forEach(post => {
-        const div = document.createElement('div');
-        div.className = 'post';
-        div.innerHTML = `
-          <h2>${post.title}</h2>
-          <p><em>${post.date}</em></p>
-          ${post.image ? `<img src="${post.image}" alt="">` : ''}
-          <p>${post.body}</p>
-        `;
-        container.appendChild(div);
-      });
     }
 
-    loadPosts();
+    loadNews();
   </script>
 </body>
 </html>
