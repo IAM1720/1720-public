@@ -4,53 +4,68 @@
   <meta charset="UTF-8">
   <title>News</title>
   <!-- Load Marked.js to parse Markdown into HTML -->
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-</head>
-<body>
-  <h1>Latest News</h1>
-  <div id="news-container">Loading news...</div>
+ <!-- Load Marked.js to convert body markdown to HTML -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
-  <script>
-    const REPO = "IAM1720/1720-public";
-    const FOLDER = "news";
+<div id="news-container">Loading news...</div>
 
-    async function loadNews() {
-      const container = document.getElementById("news-container");
-      try {
-        // 1. Get list of files from GitHub
-        const res = await fetch(`https://api.github.com/repos/${REPO}/contents/${FOLDER}`);
-        const files = await res.json();
+<script>
+  async function loadNews() {
+    const container = document.getElementById("news-container");
+    try {
+      // Fetch news.json with cache-busting timestamp
+      const res = await fetch('/news.json?v=' + Date.now());
+      const data = await res.json();
 
-        // Filter for .md files
-        const mdFiles = files.filter(f => f.name.endsWith('.md')).reverse();
-
-        if (mdFiles.length === 0) {
-          container.innerHTML = "<p>No posts found.</p>";
-          return;
-        }
-
-        container.innerHTML = "";
-
-        // 2. Fetch and render each Markdown file
-        for (const file of mdFiles) {
-          const rawRes = await fetch(file.download_url);
-          const rawText = await rawRes.text();
-
-          // Split YAML frontmatter from content
-          const parts = rawText.split(/^---$/m);
-          const markdownBody = parts.length >= 3 ? parts.slice(2).join("---") : rawText;
-
-          const article = document.createElement("article");
-          article.innerHTML = marked.parse(markdownBody);
-          container.appendChild(article);
-        }
-      } catch (err) {
-        container.innerHTML = "<p>Error loading news posts.</p>";
-        console.error(err);
+      if (!data.posts || data.posts.length === 0) {
+        container.innerHTML = "<p>No posts found.</p>";
+        return;
       }
-    }
 
-    loadNews();
-  </script>
-</body>
-</html>
+      container.innerHTML = "";
+
+      // Sort posts newest first based on publish date
+      const sortedPosts = data.posts.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      sortedPosts.forEach(post => {
+        const article = document.createElement("article");
+
+        // 1. Render Cover Image
+        if (post.image) {
+          const img = document.createElement("img");
+          img.src = post.image.startsWith('/') ? post.image : '/' + post.image;
+          img.alt = post.title || "Cover Image";
+          img.style.maxWidth = "100%";
+          article.appendChild(img);
+        }
+
+        // 2. Render Title & Date
+        if (post.title) {
+          const title = document.createElement("h2");
+          title.textContent = post.title;
+          article.appendChild(title);
+        }
+
+        if (post.date) {
+          const date = document.createElement("small");
+          date.textContent = new Date(post.date).toLocaleDateString();
+          article.appendChild(date);
+        }
+
+        // 3. Render Markdown Body
+        if (post.body) {
+          const bodyDiv = document.createElement("div");
+          bodyDiv.innerHTML = marked.parse(post.body);
+          article.appendChild(bodyDiv);
+        }
+
+        container.appendChild(article);
+      });
+    } catch (err) {
+      container.innerHTML = "<p>Error loading news posts.</p>";
+      console.error(err);
+    }
+  }
+
+  loadNews();
+</script>
