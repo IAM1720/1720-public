@@ -85,7 +85,7 @@
         article.appendChild(date);
       }
       
-      // 4. Markdown Body & Inline Image Mobile Rules
+     // 4. Markdown Body & Inline Image Mobile Rules
       if (post.body) {
         const bodyDiv = document.createElement("div");
         bodyDiv.className = "news-body";
@@ -106,7 +106,11 @@
       
         article.appendChild(bodyDiv);
       }
-        });
+
+      // ADD THIS LINE HERE:
+      container.appendChild(article);
+
+    }); // End of forEach loop
     } catch (err) {
       console.error("News Load Error:", err);
       container.innerHTML = `<p style="color:red;">Error loading news posts: ${err.message}</p>`;
