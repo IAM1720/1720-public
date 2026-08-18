@@ -2,8 +2,8 @@ backend:
   name: github
   repo: IAM1720/1720-public
   branch: main
-  base_url: https://iam1720.org
-  auth_endpoint: /auth
+  base_url: https://decap-oauth-provider.sectreas1720.workers.dev
+  auth_endpoint: auth
 
 media_folder: "assets/images/uploads"
 public_folder: "/assets/images/uploads"
