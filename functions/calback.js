@@ -27,6 +27,7 @@ export async function onRequest(context) {
     const token = data.access_token;
     const provider = "github";
 
+    // Safely encode content to prevent quotes from breaking the inline JavaScript snippet
     const content = token
       ? `authorization:${provider}:success:${JSON.stringify({ token, provider })}`
       : `authorization:${provider}:error:${JSON.stringify(data)}`;
@@ -41,11 +42,19 @@ export async function onRequest(context) {
           <p>Connecting to Decap CMS...</p>
           <script>
             (function() {
+              const content = ${JSON.stringify(content)};
+              
               function receiveMessage(e) {
-                window.opener.postMessage("${content}", e.origin);
+                if (window.opener) {
+                  window.opener.postMessage(content, "*");
+                }
               }
+              
               window.addEventListener("message", receiveMessage, false);
-              window.opener.postMessage("authorizing:${provider}", "*");
+              
+              if (window.opener) {
+                window.opener.postMessage("authorizing:${provider}", "*");
+              }
             })();
           </script>
         </body>
