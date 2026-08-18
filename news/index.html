@@ -1,71 +1,108 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>News</title>
-  <!-- Load Marked.js to parse Markdown into HTML -->
- <!-- Load Marked.js to convert body markdown to HTML -->
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>News | IAM Local 1720</title>
+  <meta name="description" content="IAM Local 1720 news and updates">
+  <link rel="stylesheet" href="../assets/css/styles.css">
+  <!-- Markdown parser for post body -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
 
-<div id="news-container">Loading news...</div>
+<main>
+  <section class="hero compact">
+    <h1>News & Updates</h1>
+    <p>Stay up to date with the latest news, announcements, and notices from Local 1720.</p>
+  </section>
+
+  <section class="content-shell">
+    <div id="news-container">Loading news...</div>
+  </section>
+</main>
 
 <script>
   async function loadNews() {
     const container = document.getElementById("news-container");
     try {
-      // Fetch news.json with cache-busting timestamp
-      const res = await fetch('/news.json?v=' + Date.now());
-      const data = await res.json();
+      // Fetch news.json relative to domain root
+      const response = await fetch('/news.json?v=' + Date.now());
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: Unable to load news.json`);
+      }
+
+      const data = await response.json();
 
       if (!data.posts || data.posts.length === 0) {
-        container.innerHTML = "<p>No posts found.</p>";
+        container.innerHTML = "<p>No posts published yet.</p>";
         return;
       }
 
       container.innerHTML = "";
 
-      // Sort posts newest first based on publish date
-      const sortedPosts = data.posts.sort((a, b) => new Date(b.date) - new Date(a.date));
+      // Sort newest posts first
+      data.posts
+        .sort((a, b) => new Date(b.date) - new Date(a.date))
+        .forEach(post => {
+          const article = document.createElement("article");
+          article.className = "feature-card news-card";
+          article.style.marginBottom = "2rem";
 
-      sortedPosts.forEach(post => {
-        const article = document.createElement("article");
+          // 1. Cover Image
+          if (post.image) {
+            const img = document.createElement("img");
+            img.src = post.image.startsWith('/') ? post.image : '/' + post.image;
+            img.alt = post.title || "";
+            img.style.width = "100%";
+            img.style.maxHeight = "400px";
+            img.style.objectFit = "cover";
+            img.style.borderRadius = "8px";
+            img.style.marginBottom = "1rem";
+            article.appendChild(img);
+          }
 
-        // 1. Render Cover Image
-        if (post.image) {
-          const img = document.createElement("img");
-          img.src = post.image.startsWith('/') ? post.image : '/' + post.image;
-          img.alt = post.title || "Cover Image";
-          img.style.maxWidth = "100%";
-          article.appendChild(img);
-        }
+          // 2. Post Title
+          if (post.title) {
+            const title = document.createElement("h2");
+            title.textContent = post.title;
+            article.appendChild(title);
+          }
 
-        // 2. Render Title & Date
-        if (post.title) {
-          const title = document.createElement("h2");
-          title.textContent = post.title;
-          article.appendChild(title);
-        }
+          // 3. Formatted Date
+          if (post.date) {
+            const date = document.createElement("p");
+            date.style.fontWeight = "bold";
+            date.style.opacity = "0.75";
+            date.style.margin = "0.25rem 0 1rem 0";
+            date.textContent = new Date(post.date).toLocaleDateString(undefined, {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            });
+            article.appendChild(date);
+          }
 
-        if (post.date) {
-          const date = document.createElement("small");
-          date.textContent = new Date(post.date).toLocaleDateString();
-          article.appendChild(date);
-        }
+          // 4. Markdown Body
+          if (post.body) {
+            const bodyDiv = document.createElement("div");
+            bodyDiv.className = "news-body";
+            bodyDiv.innerHTML = marked.parse(post.body);
+            article.appendChild(bodyDiv);
+          }
 
-        // 3. Render Markdown Body
-        if (post.body) {
-          const bodyDiv = document.createElement("div");
-          bodyDiv.innerHTML = marked.parse(post.body);
-          article.appendChild(bodyDiv);
-        }
-
-        container.appendChild(article);
-      });
+          container.appendChild(article);
+        });
     } catch (err) {
-      container.innerHTML = "<p>Error loading news posts.</p>";
-      console.error(err);
+      console.error("News Load Error:", err);
+      container.innerHTML = `<p style="color:red;">Error loading news posts: ${err.message}</p>`;
     }
   }
 
   loadNews();
 </script>
+
+<script src="../assets/js/site.js"></script>
+</body>
+</html>
