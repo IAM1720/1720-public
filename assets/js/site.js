@@ -51,11 +51,11 @@ function updateCountdown() {
   const countdown = document.getElementById('countdown');
   if (!countdown) return;
 
-  const expirationDate = new Date('2027-01-08T05:59:00');
+  const expirationDate = new Date('2026-08-20T15:45:00-0500');
   const difference = expirationDate - new Date();
 
   if (difference <= 0) {
-    countdown.textContent = 'Contract Expired';
+    countdown.textContent = 'Meeting Started';
     return;
   }
 
