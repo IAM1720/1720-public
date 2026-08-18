@@ -50,18 +50,18 @@
           article.className = "feature-card news-card";
           article.style.marginBottom = "2rem";
 
-          // 1. Cover Image
-          if (post.image) {
-            const img = document.createElement("img");
-            img.src = post.image.startsWith('/') ? post.image : '/' + post.image;
-            img.alt = post.title || "";
-            img.style.width = "100%";
-            img.style.maxHeight = "400px";
-            img.style.objectFit = "cover";
-            img.style.borderRadius = "8px";
-            img.style.marginBottom = "1rem";
-            article.appendChild(img);
-          }
+       // 1. Cover Image
+      if (post.image) {
+        const img = document.createElement("img");
+        img.src = post.image.startsWith('/') ? post.image : '/' + post.image;
+        img.alt = post.title || "";
+        img.style.maxWidth = "250px"; // Adjust width (e.g., 200px - 300px)
+        img.style.height = "auto";
+        img.style.display = "block";
+        img.style.margin = "0 auto 1rem auto"; // Centers image horizontally
+        img.style.borderRadius = "8px";
+        article.appendChild(img);
+}
 
           // 2. Post Title
           if (post.title) {
@@ -89,10 +89,23 @@
             const bodyDiv = document.createElement("div");
             bodyDiv.className = "news-body";
             bodyDiv.innerHTML = marked.parse(post.body);
+          
+            // Format and constrain any inline images inside the body content
+            bodyDiv.querySelectorAll("img").forEach(img => {
+              const src = img.getAttribute("src");
+              if (src && !src.startsWith("http") && !src.startsWith("/")) {
+                img.src = "/" + src;
+              }
+              img.style.maxWidth = "100%";
+              img.style.maxHeight = "400px";
+              img.style.height = "auto";
+              img.style.display = "block";
+              img.style.margin = "1rem auto";
+              img.style.borderRadius = "6px";
+            });
+          
             article.appendChild(bodyDiv);
-          }
-
-          container.appendChild(article);
+}
         });
     } catch (err) {
       console.error("News Load Error:", err);
