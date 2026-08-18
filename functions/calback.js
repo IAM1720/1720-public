@@ -4,41 +4,61 @@ export async function onRequest(context) {
   const url = new URL(context.request.url);
   const code = url.searchParams.get("code");
 
-  const response = await fetch("https://github.com/login/oauth/access_token", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Accept": "application/json",
-    },
-    body: JSON.stringify({ client_id, client_secret, code }),
-  });
+  if (!code) {
+    return new Response("Missing authorization code", { status: 400 });
+  }
 
-  const data = await response.json();
-  const token = data.access_token;
-  const provider = "github";
+  try {
+    const response = await fetch("https://github.com/login/oauth/access_token", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+      },
+      body: JSON.stringify({ client_id, client_secret, code }),
+    });
 
-  const content = token
-    ? `authorization:${provider}:success:${JSON.stringify({ token, provider })}`
-    : `authorization:${provider}:error:${JSON.stringify(data)}`;
+    const data = await response.json();
 
-  const html = `
-    <!DOCTYPE html>
-    <html>
-      <body>
-        <script>
-          (function() {
-            function receiveMessage(e) {
-              window.opener.postMessage("${content}", e.origin);
-            }
-            window.addEventListener("message", receiveMessage, false);
-            window.opener.postMessage("authorizing:${provider}", "*");
-          })();
-        </script>
-      </body>
-    </html>
-  `;
+    if (data.error) {
+      return new Response(`OAuth Error: ${data.error_description || data.error}`, { status: 400 });
+    }
 
-  return new Response(html, {
-    headers: { "Content-Type": "text/html;charset=UTF-8" },
-  });
+    const token = data.access_token;
+    const provider = "github";
+
+    const content = token
+      ? `authorization:${provider}:success:${JSON.stringify({ token, provider })}`
+      : `authorization:${provider}:error:${JSON.stringify(data)}`;
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Authenticating...</title>
+        </head>
+        <body>
+          <p>Connecting to Decap CMS...</p>
+          <script>
+            (function() {
+              function receiveMessage(e) {
+                window.opener.postMessage("${content}", e.origin);
+              }
+              window.addEventListener("message", receiveMessage, false);
+              window.opener.postMessage("authorizing:${provider}", "*");
+            })();
+          </script>
+        </body>
+      </html>
+    `;
+
+    return new Response(html, {
+      headers: {
+        "Content-Type": "text/html;charset=UTF-8",
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+      },
+    });
+  } catch (err) {
+    return new Response(`Server error: ${err.message}`, { status: 500 });
+  }
 }
