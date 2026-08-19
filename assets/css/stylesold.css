@@ -109,8 +109,8 @@ a { color:inherit; text-decoration:none; }
 }
 
 .hero-logo {
-  width:min(85vw,800px);
-  max-width:800px;
+  width:min(85vw,600px);
+  max-width:600px;
   height:auto;
   display:block;
   margin:0 auto 20px;
@@ -118,16 +118,10 @@ a { color:inherit; text-decoration:none; }
 
 .hero-lede,
 .hero p {
-  max-width:850px;
+  max-width:700px;
   font-size:1.1rem;
   margin-left:auto;
   margin-right:auto;
-}
-.countdown-container h2 {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
 }
 
 /* =========================================================
@@ -197,61 +191,6 @@ a { color:inherit; text-decoration:none; }
 .document-list a:hover {
   transform:translateY(-2px);
   transition:.15s;
-}
-
-.feature-card img {
-  width: 160px;      /* or whatever size looks best */
-  height: auto;      /* keeps proper proportions */
-  display: block;
-  margin-top: 12px;
-  border-radius: 8px;
-}
-.feature-card {
-  display: block;
-  max-width: 500px; /* adjust as needed */
-  margin: 0 auto 20px;
-  text-decoration: none;
-  background: #0b1f3a;
-  border-radius: 8px;
-  padding: 10px;
-}
-
-.card-content {
-  display: flex;
-  align-items: center;
-  justify-content: space-between; /* keeps them side by side */
-  gap: 10px;
-}
-
-.banner {
-  width: 60%; /* banner takes most of the space */
-  height: auto;
-}
-
-.qr {
-  width: 35%; /* QR code sits beside it */
-  height: auto;
-  border-radius: 6px;
-}
-
-/* Base spacing for desktop/tablet */
-.donations-section {
-  margin-bottom: 40px;
-}
-
-.feature-card:first-of-type {
-  margin-top: 40px;
-}
-
-/* Mobile-friendly adjustments */
-@media (max-width: 600px) {
-  .donations-section {
-    margin-bottom: 25px; /* slightly tighter on small screens */
-  }
-
-  .feature-card:first-of-type {
-    margin-top: 25px;
-  }
 }
 
 .feature-card h2 { margin-top:0; }
