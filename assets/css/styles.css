@@ -200,7 +200,7 @@ a { color:inherit; text-decoration:none; }
 }
 
 .feature-card img {
-  width: 160px;      /* or whatever size looks best */
+  width: 400px;      /* or whatever size looks best */
   height: auto;      /* keeps proper proportions */
   display: block;
   margin-top: 12px;
@@ -214,6 +214,11 @@ a { color:inherit; text-decoration:none; }
   background: #0b1f3a;
   border-radius: 8px;
   padding: 10px;
+}
+/* Override image sizes ONLY on the donations page */
+.donations-page .feature-card img {
+  width: 160px !important;
+  height: auto;
 }
 
 .card-content {
