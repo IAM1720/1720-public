@@ -67,15 +67,23 @@
       // 2. Formatted Date (now appears first)
       if (post.date) {
         const date = document.createElement("p");
-        date.style.fontWeight = "bold";
-        date.style.opacity = "0.75";
-        date.style.margin = "0.25rem 0 0.5rem 0";
+
+        // Timestamp styling
+        date.style.fontSize = "0.8rem";
+        date.style.fontWeight = "400";
+        date.style.color = "#666";
+        date.style.opacity = "0.85";
+        date.style.margin = "0 0 0.35rem 0";
+        date.style.letterSpacing = "0.3px";
+
         date.textContent = new Date(post.date).toLocaleDateString(undefined, {
           year: 'numeric',
           month: 'long',
           day: 'numeric'
         });
+
         article.appendChild(date);
+
       }
 
       // 3. Post Title (now appears after date)
