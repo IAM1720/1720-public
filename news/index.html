@@ -64,25 +64,26 @@
         article.appendChild(img);
       }
       
-      // 2. Post Title
-      if (post.title) {
-        const title = document.createElement("h2");
-        title.textContent = post.title;
-        article.appendChild(title);
-      }
-      
-      // 3. Formatted Date
+      // 2. Formatted Date (now appears first)
       if (post.date) {
         const date = document.createElement("p");
         date.style.fontWeight = "bold";
         date.style.opacity = "0.75";
-        date.style.margin = "0.25rem 0 1rem 0";
+        date.style.margin = "0.25rem 0 0.5rem 0";
         date.textContent = new Date(post.date).toLocaleDateString(undefined, {
           year: 'numeric',
           month: 'long',
           day: 'numeric'
         });
         article.appendChild(date);
+      }
+
+      // 3. Post Title (now appears after date)
+      if (post.title) {
+        const title = document.createElement("h2");
+        title.textContent = post.title;
+        article.appendChild(title);
+      
       }
       
      // 4. Markdown Body & Inline Image Mobile Rules
