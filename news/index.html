@@ -96,22 +96,30 @@
       
      // 4. Markdown Body & Inline Image Mobile Rules
       if (post.body) {
-        const bodyDiv = document.createElement("div");
-        bodyDiv.className = "news-body";
-        bodyDiv.innerHTML = marked.parse(post.body);
-      
-        // Responsive styling for images inside post body
         bodyDiv.querySelectorAll("img").forEach(img => {
-          const src = img.getAttribute("src");
-          if (src && !src.startsWith("http") && !src.startsWith("/")) {
-            img.src = "/" + src;
-          }
-          img.style.maxWidth = "100%";       // Fits inside card padding
-          img.style.height = "auto";         // Prevents distortion
-          img.style.display = "block";
-          img.style.margin = "1rem auto";
-          img.style.borderRadius = "6px";
-        });
+        const src = img.getAttribute("src");
+
+        // Fix relative paths
+        if (src && !src.startsWith("http") && !src.startsWith("/")) {
+          img.src = "/" + src;
+        }
+
+        // Wrap image in clickable link
+        const link = document.createElement("a");
+        link.href = img.src;
+        link.target = "_blank";
+
+        img.parentNode.insertBefore(link, img);
+        link.appendChild(img);
+
+        // Responsive styling
+        img.style.maxWidth = "100%";
+        img.style.height = "auto";
+        img.style.display = "block";
+        img.style.margin = "1rem auto";
+        img.style.borderRadius = "6px";
+      });
+
       
         article.appendChild(bodyDiv);
       }
