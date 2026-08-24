@@ -26,7 +26,6 @@
   async function loadNews() {
     const container = document.getElementById("news-container");
     try {
-      // Fetch news.json relative to domain root
       const response = await fetch('/news.json?v=' + Date.now());
       
       if (!response.ok) {
@@ -42,7 +41,6 @@
 
       container.innerHTML = "";
 
-      // Sort newest posts first
       data.posts
         .sort((a, b) => new Date(b.date) - new Date(a.date))
         .forEach(post => {
@@ -50,25 +48,23 @@
           article.className = "feature-card news-card";
           article.style.marginBottom = "2rem";
 
-      // 1. Cover Image (Fluid Mobile Scaling)
+      // 1. Cover Image (not clickable)
       if (post.image) {
         const img = document.createElement("img");
         img.src = post.image.startsWith('/') ? post.image : '/' + post.image;
         img.alt = post.title || "";
-        img.style.width = "100%";          // Scales fluidly on small screens
-        img.style.maxWidth = "250px";       // Prevents image from getting too large on desktop
-        img.style.height = "auto";          // Maintains aspect ratio
+        img.style.width = "100%";
+        img.style.maxWidth = "250px";
+        img.style.height = "auto";
         img.style.display = "block";
         img.style.margin = "0 auto 1rem auto";
         img.style.borderRadius = "8px";
         article.appendChild(img);
       }
       
-      // 2. Formatted Date (now appears first)
+      // 2. Timestamp (smaller, subtle)
       if (post.date) {
         const date = document.createElement("p");
-
-        // Timestamp styling
         date.style.fontSize = "0.8rem";
         date.style.fontWeight = "400";
         date.style.color = "#666";
@@ -83,51 +79,54 @@
         });
 
         article.appendChild(date);
-
       }
 
-      // 3. Post Title (now appears after date)
+      // 3. Title
       if (post.title) {
         const title = document.createElement("h2");
         title.textContent = post.title;
         article.appendChild(title);
-      
       }
       
-     // 4. Markdown Body & Inline Image Mobile Rules
+      // 4. Markdown Body + Clickable Inline Images
       if (post.body) {
+        const bodyDiv = document.createElement("div");
+        bodyDiv.className = "news-body";
+        bodyDiv.innerHTML = marked.parse(post.body);
+
+        // Make inline images clickable + open full-size in SAME window
         bodyDiv.querySelectorAll("img").forEach(img => {
-        const src = img.getAttribute("src");
+          let src = img.getAttribute("src");
 
-        // Fix relative paths
-        if (src && !src.startsWith("http") && !src.startsWith("/")) {
-          img.src = "/" + src;
-        }
+          // Fix relative paths
+          if (src && !src.startsWith("http") && !src.startsWith("/")) {
+            src = "/" + src;
+            img.src = src;
+          }
 
-        // Wrap image in clickable link
-        const link = document.createElement("a");
-        link.href = img.src;
-        link.target = "_blank";
+          // Wrap image in clickable link
+          const link = document.createElement("a");
+          link.href = src;
+          link.style.display = "block";
+          link.style.textDecoration = "none";
 
-        img.parentNode.insertBefore(link, img);
-        link.appendChild(img);
+          img.parentNode.insertBefore(link, img);
+          link.appendChild(img);
 
-        // Responsive styling
-        img.style.maxWidth = "100%";
-        img.style.height = "auto";
-        img.style.display = "block";
-        img.style.margin = "1rem auto";
-        img.style.borderRadius = "6px";
-      });
+          // Responsive styling
+          img.style.maxWidth = "100%";
+          img.style.height = "auto";
+          img.style.display = "block";
+          img.style.margin = "1rem auto";
+          img.style.borderRadius = "6px";
+        });
 
-      
         article.appendChild(bodyDiv);
       }
 
-      // ADD THIS LINE HERE:
       container.appendChild(article);
 
-    }); // End of forEach loop
+    }); // End forEach
     } catch (err) {
       console.error("News Load Error:", err);
       container.innerHTML = `<p style="color:red;">Error loading news posts: ${err.message}</p>`;
