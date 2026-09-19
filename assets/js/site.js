@@ -51,9 +51,9 @@ function updateCountdown() {
   const countdown = document.getElementById('countdown');
   if (!countdown) return;
 
-  const expirationDate = new Date('2026-10-157T15:45:00-05:00');
+  const expirationDate = new Date('2026-09-17T15:45:00-0500');
   const difference = expirationDate - new Date();
-
+  
   if (difference <= 0) {
     countdown.textContent = 'Meeting Started';
     return;
