@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-950 text-slate-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reverse Raffle - Main Display Board</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Canvas Confetti Library for Celebratory Visuals -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <!-- Google Font: Inter & Orbitron for TV Readability -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Orbitron', 'sans-serif']
+          },
+          colors: {
+            gold: {
+              300: '#fde047',
+              400: '#facc15',
+              500: '#eab308',
+              600: '#ca8a04',
+            }
+          },
+          animation: {
+            'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'glow-gold': 'glowGold 2s infinite alternate',
+          },
+          keyframes: {
+            glowGold: {
+              '0%': { boxShadow: '0 0 15px rgba(234, 179, 8, 0.4)' },
+              '100%': { boxShadow: '0 0 35px rgba(234, 179, 8, 0.9)' }
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom Scrollbar for Sidebar Log */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.6);
+      border-radius: 8px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(51, 65, 85, 0.8);
+      border-radius: 8px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(71, 85, 105, 1);
+    }
+
+    /* Cell state transitions */
+    .ticket-cell {
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      user-select: none;
+    }
+
+    /* Scanline effect for high-tech TV board aesthetic */
+    .tv-overlay {
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.2) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+      background-size: 100% 3px, 6px 100%;
+      pointer-events: none;
+    }
+
+    /* Modal Backdrop Blur */
+    .backdrop-blur-custom {
+      backdrop-filter: blur(12px);
+    }
+  </style>
+</head>
+
+<body class="h-full flex flex-col font-sans overflow-x-hidden select-none bg-slate-950 text-slate-100">
+
+  <!-- TV Overlay FX -->
+  <div class="tv-overlay fixed inset-0 z-50 pointer-events-none opacity-40"></div>
+
+  <div class="flex flex-col h-screen w-full p-3 md:p-6 gap-4">
+
+    <!-- TOP CONTROL BAR -->
+    <header class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 md:p-4 shadow-2xl flex flex-wrap items-center justify-between gap-4 z-10 shrink-0">
+      
+      <!-- Title & Live Badge -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-yellow-500 to-amber-700 flex items-center justify-center text-slate-950 font-black text-xl md:text-2xl shadow-lg shadow-amber-500/20">
+          <i class="fa-solid fa-ticket"></i>
+        </div>
+        <div>
+          <h1 class="font-display text-xl md:text-2xl font-extrabold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-yellow-200 to-slate-100">
+            REVERSE RAFFLE
+          </h1>
+          <div class="flex items-center gap-2">
+            <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <p class="text-xs text-slate-400 font-semibold tracking-wider uppercase">Live TV Drawboard</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Draw Entry Form -->
+      <div class="flex-1 max-w-md mx-2">
+        <form id="draw-form" onsubmit="handleFormSubmit(event)" class="relative flex items-center">
+          <div class="absolute left-3.5 text-slate-400 text-lg">
+            <i class="fa-solid fa-hashtag"></i>
+          </div>
+          <input 
+            type="number" 
+            id="ticket-input" 
+            min="1" 
+            max="100" 
+            placeholder="Type ticket # and hit Enter..." 
+            class="w-full bg-slate-950 border-2 border-slate-700 text-slate-100 font-bold text-lg rounded-xl pl-10 pr-24 py-2.5 focus:outline-none focus:border-amber-400 focus:ring-4 focus:ring-amber-500/20 transition-all placeholder:text-slate-500 placeholder:font-normal"
+            autocomplete="off"
+          />
+          <button 
+            type="submit" 
+            class="absolute right-1.5 px-4 py-1.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-extrabold rounded-lg shadow-md hover:shadow-yellow-500/20 active:scale-95 transition-all text-sm uppercase tracking-wider"
+          >
+            DRAW
+          </button>
+        </form>
+      </div>
+
+      <!-- System Action Buttons -->
+      <div class="flex items-center gap-2">
+        <!-- Sound Toggle -->
+        <button 
+          id="sound-btn" 
+          onclick="toggleSound()" 
+          title="Toggle Sound Effects"
+          class="p-2.5 md:p-3 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700 active:scale-95 transition-all flex items-center justify-center w-11 h-11"
+        >
+          <i id="sound-icon" class="fa-solid fa-volume-high text-lg"></i>
+        </button>
+
+        <!-- Fullscreen Toggle -->
+        <button 
+          onclick="toggleFullscreen()" 
+          title="Toggle TV Fullscreen (F11)"
+          class="p-2.5 md:p-3 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700 active:scale-95 transition-all flex items-center justify-center w-11 h-11"
+        >
+          <i class="fa-solid fa-expand text-lg"></i>
+        </button>
+
+        <!-- Undo Button -->
+        <button 
+          onclick="undoLastDraw()" 
+          title="Undo Last Drawn Ticket"
+          class="px-3 md:px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-amber-400 font-bold active:scale-95 transition-all flex items-center gap-2 text-sm"
+        >
+          <i class="fa-solid fa-rotate-left"></i>
+          <span class="hidden sm:inline">Undo</span>
+        </button>
+
+        <!-- Reset Button -->
+        <button 
+          onclick="confirmReset()" 
+          title="Reset Entire Event"
+          class="px-3 md:px-4 py-2.5 rounded-xl bg-red-950/60 hover:bg-red-900/80 border border-red-800/80 text-red-300 font-bold active:scale-95 transition-all flex items-center gap-2 text-sm"
+        >
+          <i class="fa-solid fa-power-off"></i>
+          <span class="hidden sm:inline">Reset</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- MAIN BOARD CONTENT AREA -->
+    <div class="flex-1 flex flex-col lg:flex-row gap-4 min-h-0">
+      
+      <!-- LEFT CONTAINER: 10x10 TICKET GRID -->
+      <main class="flex-1 bg-slate-900/80 border border-slate-800 rounded-2xl p-3 md:p-5 flex flex-col justify-center items-center shadow-2xl relative overflow-hidden">
+        
+        <!-- Background subtle glow -->
+        <div class="absolute -top-24 -left-24 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-24 -right-24 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <!-- The 10x10 Grid -->
+        <div id="ticket-grid" class="grid grid-cols-10 gap-1.5 md:gap-2.5 lg:gap-3 w-full max-w-5xl h-full max-h-[82vh] aspect-square">
+          <!-- Dynamically generated 100 ticket buttons -->
+        </div>
+      </main>
+
+      <!-- RIGHT CONTAINER: STATS & DRAW HISTORY SIDEBAR -->
+      <aside class="w-full lg:w-80 xl:w-96 bg-slate-900/80 border border-slate-800 rounded-2xl p-4 flex flex-col gap-4 shadow-2xl shrink-0 overflow-hidden">
+        
+        <!-- Top Metrics Cards -->
+        <div class="grid grid-cols-2 gap-3">
+          
+          <!-- Remaining Count -->
+          <div class="bg-gradient-to-br from-amber-500/15 to-yellow-600/10 border border-amber-500/30 rounded-xl p-3.5 flex flex-col justify-between">
+            <span class="text-xs text-amber-400 font-extrabold uppercase tracking-wider flex items-center gap-1.5">
+              <i class="fa-solid fa-layer-group"></i> Remaining
+            </span>
+            <span id="stat-remaining" class="font-display text-3xl md:text-4xl font-black text-amber-300 mt-1">
+              100
+            </span>
+          </div>
+
+          <!-- Total Drawn Count -->
+          <div class="bg-slate-950/60 border border-slate-800 rounded-xl p-3.5 flex flex-col justify-between">
+            <span class="text-xs text-slate-400 font-extrabold uppercase tracking-wider flex items-center gap-1.5">
+              <i class="fa-solid fa-ban"></i> Eliminated
+            </span>
+            <span id="stat-drawn" class="font-display text-3xl md:text-4xl font-black text-slate-200 mt-1">
+              0
+            </span>
+          </div>
+        </div>
+
+        <!-- Next Minor Prize Countdown Widget -->
+        <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-3.5 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-lg bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 flex items-center justify-center font-bold">
+              <i class="fa-solid fa-gift"></i>
+            </div>
+            <div>
+              <div class="text-xs text-slate-400 uppercase font-semibold">Next Minor Prize</div>
+              <div id="stat-minor-countdown" class="text-sm font-bold text-indigo-300">In 10 Draws</div>
+            </div>
+          </div>
+          <div id="stat-minor-badge" class="px-2.5 py-1 bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 font-display text-xs font-bold rounded-full">
+            Every 10th
+          </div>
+        </div>
+
+        <!-- Last Drawn Highlight Card -->
+        <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-4 flex items-center justify-between relative overflow-hidden">
+          <div class="z-10">
+            <span class="text-xs text-slate-400 font-extrabold uppercase tracking-wider">Most Recent Ticket</span>
+            <div id="stat-last-drawn" class="font-display text-3xl md:text-4xl font-black text-amber-400 mt-0.5">
+              --
+            </div>
+          </div>
+          <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500/20 to-yellow-500/5 border border-amber-500/30 flex items-center justify-center text-amber-400 text-2xl z-10">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+          </div>
+          <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-amber-500/10 rounded-full blur-xl"></div>
+        </div>
+
+        <!-- History Feed Header -->
+        <div class="flex items-center justify-between pt-1">
+          <span class="text-xs font-extrabold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+            <i class="fa-solid fa-list-ol"></i> Draw History
+          </span>
+          <span id="stat-history-count" class="text-xs font-bold text-slate-500">0 of 100</span>
+        </div>
+
+        <!-- History Feed Scroll Area -->
+        <div id="history-list" class="flex-1 bg-slate-950/80 border border-slate-800 rounded-xl p-2.5 overflow-y-auto flex flex-col gap-2 min-h-[160px]">
+          <div id="history-empty" class="h-full flex flex-col items-center justify-center text-slate-600 p-4 text-center">
+            <i class="fa-solid fa-box-open text-3xl mb-2 opacity-50"></i>
+            <p class="text-xs font-medium">No tickets drawn yet.<br>Click a number or type to draw.</p>
+          </div>
+        </div>
+
+      </aside>
+    </div>
+  </div>
+
+
+  <!-- OVERLAY MODAL: MINOR PRIZE WINNER (Every 10th Ticket) -->
+  <div id="minor-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-custom hidden transition-opacity duration-300">
+    <div class="bg-gradient-to-b from-slate-900 to-slate-950 border-2 border-indigo-500/60 rounded-3xl p-6 md:p-10 max-w-lg w-full text-center shadow-2xl relative overflow-hidden animate-glow-gold">
+      
+      <!-- Top Icon Decor -->
+      <div class="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-slate-950 text-4xl font-black shadow-lg shadow-indigo-500/40">
+        <i class="fa-solid fa-award"></i>
+      </div>
+
+      <div class="inline-block px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 font-bold text-xs uppercase tracking-widest mb-2">
+        Milestone Reached
+      </div>
+
+      <h2 class="font-display text-2xl md:text-3xl font-black text-slate-100 tracking-wide mb-1">
+        MINOR PRIZE WINNER!
+      </h2>
+      <p class="text-slate-400 text-sm font-semibold mb-6">
+        Every 10th ticket drawn wins a minor prize!
+      </p>
+
+      <!-- Winning Ticket Display Box -->
+      <div class="bg-slate-950 border-2 border-indigo-500/50 rounded-2xl p-6 mb-6 relative">
+        <div class="text-xs text-indigo-400 font-bold uppercase tracking-widest mb-1">10th Draw Milestone Ticket</div>
+        <div id="minor-ticket-number" class="font-display text-6xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 via-purple-200 to-pink-300">
+          #40
+        </div>
+        <div id="minor-draw-count" class="text-xs font-semibold text-slate-500 mt-2">
+          Draw #30 of 100
+        </div>
+      </div>
+
+      <button 
+        onclick="closeModal('minor-modal')" 
+        class="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-extrabold rounded-xl shadow-xl shadow-indigo-600/30 text-lg uppercase tracking-wider active:scale-95 transition-all"
+      >
+        Continue Raffle
+      </button>
+    </div>
+  </div>
+
+  <!-- OVERLAY MODAL: LAST 5 SPLIT DECISION -->
+  <div id="top5-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-custom hidden transition-opacity duration-300">
+    <div class="bg-gradient-to-b from-slate-900 to-slate-950 border-2 border-amber-500/80 rounded-3xl p-6 md:p-10 max-w-2xl w-full text-center shadow-2xl relative overflow-hidden">
+      
+      <!-- Glowing Background Element -->
+      <div class="absolute -top-32 left-1/2 -translate-x-1/2 w-80 h-80 bg-amber-500/20 rounded-full blur-3xl pointer-events-none"></div>
+
+      <div class="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-tr from-amber-400 to-yellow-600 flex items-center justify-center text-slate-950 text-4xl font-black shadow-xl shadow-amber-500/40">
+        <i class="fa-solid fa-handshake font-black"></i>
+      </div>
+
+      <div class="inline-block px-4 py-1 rounded-full bg-amber-500/20 border border-amber-500/50 text-amber-300 font-extrabold text-xs uppercase tracking-widest mb-2">
+        Final 5 Tickets Remaining
+      </div>
+
+      <h2 class="font-display text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-200 to-white tracking-wide mb-2">
+        SPLIT OR CONTINUE?
+      </h2>
+      <p class="text-slate-300 text-sm md:text-base font-medium max-w-md mx-auto mb-6">
+        We are down to the final 5 finalists! The remaining ticket holders can now choose to <strong class="text-amber-400">split the pot</strong> or <strong class="text-amber-400">continue drawing</strong>.
+      </p>
+
+      <!-- Active 5 Numbers List -->
+      <div class="bg-slate-950 border-2 border-amber-500/40 rounded-2xl p-5 mb-8">
+        <div class="text-xs text-amber-400 font-bold uppercase tracking-widest mb-3">
+          The Remaining 5 Active Tickets
+        </div>
+        <div id="top5-tickets-container" class="flex flex-wrap items-center justify-center gap-3">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-3">
+        <button 
+          onclick="closeModal('top5-modal')" 
+          class="flex-1 py-4 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black rounded-xl shadow-xl shadow-amber-500/20 text-lg uppercase tracking-wider active:scale-95 transition-all"
+        >
+          Continue Drawing
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- OVERLAY MODAL: GRAND PRIZE WINNER (1 Ticket Remaining) -->
+  <div id="winner-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-custom hidden transition-opacity duration-300">
+    <div class="bg-gradient-to-b from-slate-900 via-slate-950 to-slate-950 border-4 border-yellow-400 rounded-3xl p-8 md:p-12 max-w-2xl w-full text-center shadow-2xl relative overflow-hidden animate-glow-gold">
+      
+      <!-- Celebratory Icon -->
+      <div class="w-24 h-24 mx-auto mb-6 rounded-3xl bg-gradient-to-tr from-yellow-400 via-amber-500 to-yellow-600 flex items-center justify-center text-slate-950 text-5xl font-black shadow-2xl shadow-yellow-500/50">
+        <i class="fa-solid fa-trophy"></i>
+      </div>
+
+      <div class="inline-block px-4 py-1.5 rounded-full bg-yellow-400/20 border border-yellow-400/50 text-yellow-300 font-black text-xs uppercase tracking-widest mb-3">
+        Grand Finale Champion
+      </div>
+
+      <h2 class="font-display text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-amber-200 to-white tracking-wider mb-2">
+        GRAND PRIZE WINNER!
+      </h2>
+      <p class="text-slate-300 text-base font-semibold mb-6">
+        The last ticket standing wins the grand prize reverse raffle jackpot!
+      </p>
+
+      <!-- Winner Ticket Box -->
+      <div class="bg-gradient-to-br from-amber-500/20 via-slate-950 to-slate-950 border-2 border-yellow-400 rounded-3xl p-8 mb-8 relative shadow-2xl">
+        <div class="text-xs text-yellow-400 font-extrabold uppercase tracking-widest mb-2">Sole Remaining Ticket</div>
+        <div id="winner-ticket-number" class="font-display text-7xl md:text-8xl font-black text-amber-300 tracking-tight drop-shadow-[0_10px_10px_rgba(0,0,0,0.8)]">
+          #77
+        </div>
+      </div>
+
+      <button 
+        onclick="closeModal('winner-modal')" 
+        class="w-full py-4 bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 text-slate-950 font-black rounded-xl shadow-xl shadow-yellow-500/30 text-xl uppercase tracking-wider active:scale-95 transition-all"
+      >
+        View Final Board
+      </button>
+    </div>
+  </div>
+
+  <script>
+    /* ==========================================================================
+       REVERSE RAFFLE APPLICATION ENGINE
+       ========================================================================== */
+
+    // Application State Object
+    const STORAGE_KEY = 'reverse_raffle_state_v2';
+    
+    let state = {
+      drawnTickets: [], // List of drawn ticket numbers in order
+      soundEnabled: true
+    };
+
+    // Web Audio Synthesizer Engine (No external sound files needed!)
+    let audioCtx = null;
+
+    function getAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    function playSound(type) {
+      if (!state.soundEnabled) return;
+      
+      try {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+
+        if (type === 'draw') {
+          // Sharp synth tick/chime
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(587.33, now); // D5
+          osc.frequency.exponentialRampToValueAtTime(880, now + 0.12); // A5
+          
+          gain.gain.setValueAtTime(0.3, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+          
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.15);
+        } 
+        else if (type === 'undo') {
+          // Descending pitch tone
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(440, now);
+          osc.frequency.exponentialRampToValueAtTime(220, now + 0.2);
+          
+          gain.gain.setValueAtTime(0.3, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+          
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.2);
+        }
+        else if (type === 'minorPrize') {
+          // Celebratory arpeggio brass sound
+          const freqs = [523.25, 659.25, 783.99, 1046.50]; // C Major Chord C5-E5-G5-C6
+          freqs.forEach((f, index) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            const startTime = now + (index * 0.08);
+            
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(f, startTime);
+            
+            gain.gain.setValueAtTime(0.3, startTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.4);
+            
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(startTime);
+            osc.stop(startTime + 0.4);
+          });
+        }
+        else if (type === 'top5') {
+          // Dramatic tension alert tone
+          [349.23, 440, 523.25].forEach((f) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(f, now);
+            
+            gain.gain.setValueAtTime(0.15, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+            
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.6);
+          });
+        }
+        else if (type === 'winner') {
+          // Grand Fanfare
+          const fanfare = [
+            { f: 523.25, t: 0.0 },  // C5
+            { f: 659.25, t: 0.15 }, // E5
+            { f: 783.99, t: 0.30 }, // G5
+            { f: 1046.50, t: 0.45 },// C6
+            { f: 1318.51, t: 0.70 } // E6
+          ];
+          fanfare.forEach(note => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            const startTime = now + note.t;
+            const duration = note.t === 0.70 ? 1.2 : 0.25;
+
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(note.f, startTime);
+
+            gain.gain.setValueAtTime(0.25, startTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(startTime);
+            osc.stop(startTime + duration);
+          });
+        }
+      } catch (err) {
+        console.warn('Audio play restricted or unsupported:', err);
+      }
+    }
+
+
+    // Load state from localStorage on startup
+    function loadState() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && Array.isArray(parsed.drawnTickets)) {
+            state.drawnTickets = parsed.drawnTickets;
+          }
+          if (typeof parsed.soundEnabled === 'boolean') {
+            state.soundEnabled = parsed.soundEnabled;
+          }
+        }
+      } catch (e) {
+        console.error("Failed to load saved raffle state:", e);
+      }
+      updateSoundIcon();
+    }
+
+    // Save state to localStorage
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (e) {
+        console.error("Failed to save raffle state:", e);
+      }
+    }
+
+    // Initialize 10x10 Grid DOM elements
+    function buildGrid() {
+      const gridEl = document.getElementById('ticket-grid');
+      gridEl.innerHTML = '';
+
+      for (let i = 1; i <= 100; i++) {
+        const btn = document.createElement('button');
+        btn.id = `ticket-cell-${i}`;
+        btn.setAttribute('data-ticket', i);
+        btn.setAttribute('onclick', `toggleTicket(${i})`);
+        btn.className = 'ticket-cell rounded-xl font-display font-extrabold flex items-center justify-center text-base sm:text-lg md:text-xl lg:text-2xl cursor-pointer border shadow-sm relative overflow-hidden';
+        btn.innerText = i;
+        gridEl.appendChild(btn);
+      }
+    }
+
+    // Render Grid cell states based on current `drawnTickets`
+    function renderBoard() {
+      const drawnSet = new Set(state.drawnTickets);
+      const lastDrawn = state.drawnTickets.length > 0 ? state.drawnTickets[state.drawnTickets.length - 1] : null;
+
+      for (let i = 1; i <= 100; i++) {
+        const cell = document.getElementById(`ticket-cell-${i}`);
+        if (!cell) continue;
+
+        const isDrawn = drawnSet.has(i);
+        const isLast = (i === lastDrawn);
+
+        if (isLast) {
+          // Pulse highlighted cell for most recent ticket
+          cell.className = 'ticket-cell rounded-xl font-display font-black flex items-center justify-center text-xl sm:text-2xl md:text-3xl cursor-pointer bg-gradient-to-br from-amber-400 via-yellow-400 to-amber-500 text-slate-950 border-2 border-yellow-200 shadow-xl shadow-yellow-500/50 animate-pulse scale-105 z-10';
+        } else if (isDrawn) {
+          // Dimmed / Strike-through eliminated cell
+          cell.className = 'ticket-cell rounded-xl font-display font-bold flex items-center justify-center text-base sm:text-lg md:text-xl cursor-pointer bg-slate-950/70 text-slate-600 border border-slate-900/90 line-through opacity-30 scale-95';
+        } else {
+          // Active ticket in play cell
+          cell.className = 'ticket-cell rounded-xl font-display font-black flex items-center justify-center text-base sm:text-lg md:text-xl lg:text-2xl cursor-pointer bg-slate-800/90 text-slate-100 border border-slate-700/80 hover:bg-amber-500/20 hover:border-amber-400 hover:text-amber-300 shadow-md hover:scale-105 transition-all';
+        }
+      }
+
+      // Update Top Metrics & History
+      updateMetrics();
+      renderHistory();
+    }
+
+    // Update Statistics Bar
+    function updateMetrics() {
+      const drawnCount = state.drawnTickets.length;
+      const remainingCount = 100 - drawnCount;
+      const lastDrawn = drawnCount > 0 ? `#${state.drawnTickets[drawnCount - 1]}` : '--';
+
+      document.getElementById('stat-drawn').innerText = drawnCount;
+      document.getElementById('stat-remaining').innerText = remainingCount;
+      document.getElementById('stat-last-drawn').innerText = lastDrawn;
+
+      // Countdown to next 10th ticket minor prize
+      const minorCountdownEl = document.getElementById('stat-minor-countdown');
+      if (drawnCount === 100) {
+        minorCountdownEl.innerText = 'Completed';
+      } else {
+        const drawsUntilMinor = 10 - (drawnCount % 10);
+        if (drawsUntilMinor === 10) {
+          minorCountdownEl.innerText = 'Next on Draw #' + (drawnCount + 10);
+        } else {
+          minorCountdownEl.innerText = `In ${drawsUntilMinor} Draw${drawsUntilMinor > 1 ? 's' : ''}`;
+        }
+      }
+    }
+
+    // Render Side History Log Feed
+    function renderHistory() {
+      const historyEl = document.getElementById('history-list');
+      const emptyEl = document.getElementById('history-empty');
+      const historyCountEl = document.getElementById('stat-history-count');
+
+      historyCountEl.innerText = `${state.drawnTickets.length} of 100`;
+
+      if (state.drawnTickets.length === 0) {
+        historyEl.innerHTML = '';
+        historyEl.appendChild(emptyEl);
+        return;
+      }
+
+      // Render items reverse chronological (newest at top)
+      let html = '';
+      for (let index = state.drawnTickets.length - 1; index >= 0; index--) {
+        const ticketNum = state.drawnTickets[index];
+        const drawOrder = index + 1;
+        const isMinorPrize = (drawOrder % 10 === 0);
+
+        html += `
+          <div class="flex items-center justify-between bg-slate-900 border ${isMinorPrize ? 'border-indigo-500/50 bg-indigo-950/20' : 'border-slate-800'} rounded-lg p-2 px-3 text-xs">
+            <div class="flex items-center gap-2.5">
+              <span class="w-6 h-6 rounded-md ${isMinorPrize ? 'bg-indigo-500 text-slate-950 font-black' : 'bg-slate-800 text-slate-400 font-bold'} flex items-center justify-center text-[10px]">
+                #${drawOrder}
+              </span>
+              <span class="font-display font-extrabold text-slate-200 text-sm">
+                Ticket #${ticketNum}
+              </span>
+            </div>
+            ${isMinorPrize ? '<span class="text-[10px] font-extrabold text-indigo-400 bg-indigo-500/20 px-2 py-0.5 rounded-full uppercase tracking-wider">Minor Prize</span>' : '<span class="text-[10px] text-slate-500 font-semibold">Eliminated</span>'}
+          </div>
+        `;
+      }
+
+      historyEl.innerHTML = html;
+    }
+
+    // Handle Direct Click or Input Draw
+    function toggleTicket(ticketNum) {
+      const index = state.drawnTickets.indexOf(ticketNum);
+      
+      if (index === -1) {
+        // Draw the ticket
+        drawTicket(ticketNum);
+      } else {
+        // If clicking an already drawn ticket, offer to undo back to it or untoggle
+        if (index === state.drawnTickets.length - 1) {
+          undoLastDraw();
+        }
+      }
+    }
+
+    // Core Drawing Logic
+    function drawTicket(ticketNum) {
+      if (ticketNum < 1 || ticketNum > 100) return;
+      if (state.drawnTickets.includes(ticketNum)) return;
+
+      state.drawnTickets.push(ticketNum);
+      saveState();
+      renderBoard();
+
+      const totalDrawn = state.drawnTickets.length;
+
+      // Check Milestones
+      if (totalDrawn === 99) {
+        // GRAND PRIZE WINNER TRIGGER (1 ticket left)
+        const remainingTicket = getRemainingTickets()[0];
+        triggerGrandWinner(remainingTicket);
+      } 
+      else if (totalDrawn === 95) {
+        // TOP 5 REMAINING SPLIT DECISION TRIGGER
+        triggerTop5Modal();
+      } 
+      else if (totalDrawn % 10 === 0 && totalDrawn < 100) {
+        // 10TH TICKET MINOR PRIZE TRIGGER
+        triggerMinorPrizeModal(ticketNum, totalDrawn);
+      } 
+      else {
+        // Regular draw sound
+        playSound('draw');
+      }
+
+      // Re-focus input box for fast continuous typing
+      const input = document.getElementById('ticket-input');
+      input.value = '';
+      input.focus();
+    }
+
+    // Undo Last Drawn Ticket
+    function undoLastDraw() {
+      if (state.drawnTickets.length === 0) return;
+      
+      const popped = state.drawnTickets.pop();
+      saveState();
+      renderBoard();
+      playSound('undo');
+
+      // Re-focus input
+      const input = document.getElementById('ticket-input');
+      input.focus();
+    }
+
+    // Helper: Return list of active ticket numbers remaining
+    function getRemainingTickets() {
+      const drawnSet = new Set(state.drawnTickets);
+      const remaining = [];
+      for (let i = 1; i <= 100; i++) {
+        if (!drawnSet.has(i)) remaining.push(i);
+      }
+      return remaining;
+    }
+
+    // Trigger Minor Prize Celebration
+    function triggerMinorPrizeModal(ticketNum, drawCount) {
+      document.getElementById('minor-ticket-number').innerText = `#${ticketNum}`;
+      document.getElementById('minor-draw-count').innerText = `Draw #${drawCount} of 100`;
+      
+      openModal('minor-modal');
+      playSound('minorPrize');
+
+      // Trigger Confetti
+      try {
+        confetti({
+          particleCount: 80,
+          spread: 60,
+          origin: { y: 0.6 }
+        });
+      } catch(e){}
+    }
+
+    // Trigger Top 5 Split Modal
+    function triggerTop5Modal() {
+      const activeTickets = getRemainingTickets();
+      const container = document.getElementById('top5-tickets-container');
+      
+      container.innerHTML = activeTickets.map(num => `
+        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 to-yellow-500 text-slate-950 font-display font-black text-2xl flex items-center justify-center shadow-lg shadow-amber-500/30 border-2 border-yellow-200">
+          #${num}
+        </div>
+      `).join('');
+
+      openModal('top5-modal');
+      playSound('top5');
+    }
+
+    // Trigger Grand Winner Modal
+    function triggerGrandWinner(winnerTicketNum) {
+      document.getElementById('winner-ticket-number').innerText = `#${winnerTicketNum}`;
+      
+      openModal('winner-modal');
+      playSound('winner');
+
+      // Extended Victory Confetti Cannon
+      try {
+        const duration = 3 * 1000;
+        const animationEnd = Date.now() + duration;
+        const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
+
+        const interval = setInterval(function() {
+          const timeLeft = animationEnd - Date.now();
+          if (timeLeft <= 0) return clearInterval(interval);
+
+          const particleCount = 50 * (timeLeft / duration);
+          confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+          confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+        }, 250);
+      } catch(e){}
+    }
+
+    function randomInRange(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+
+    // Form Submit Handler
+    function handleFormSubmit(e) {
+      e.preventDefault();
+      const input = document.getElementById('ticket-input');
+      const val = parseInt(input.value, 10);
+      
+      if (!isNaN(val) && val >= 1 && val <= 100) {
+        if (state.drawnTickets.includes(val)) {
+          alert(`Ticket #${val} has already been drawn!`);
+        } else {
+          drawTicket(val);
+        }
+      }
+      input.value = '';
+    }
+
+    // Reset Confirmation
+    function confirmReset() {
+      if (confirm('Are you sure you want to reset the entire Reverse Raffle board? All drawn tickets will be cleared.')) {
+        state.drawnTickets = [];
+        saveState();
+        renderBoard();
+        playSound('undo');
+      }
+    }
+
+    // Modal Helpers
+    function openModal(id) {
+      const modal = document.getElementById(id);
+      if (modal) {
+        modal.classList.remove('hidden');
+      }
+    }
+
+    function closeModal(id) {
+      const modal = document.getElementById(id);
+      if (modal) {
+        modal.classList.add('hidden');
+      }
+      // Re-focus input after closing modal
+      document.getElementById('ticket-input').focus();
+    }
+
+    // Sound Toggle
+    function toggleSound() {
+      state.soundEnabled = !state.soundEnabled;
+      saveState();
+      updateSoundIcon();
+    }
+
+    function updateSoundIcon() {
+      const icon = document.getElementById('sound-icon');
+      const btn = document.getElementById('sound-btn');
+      if (state.soundEnabled) {
+        icon.className = 'fa-solid fa-volume-high text-lg text-emerald-400';
+        btn.title = "Sound FX Enabled";
+      } else {
+        icon.className = 'fa-solid fa-volume-xmark text-lg text-slate-500';
+        btn.title = "Sound FX Muted";
+      }
+    }
+
+    // Fullscreen API Toggle
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+          console.warn(`Error attempting to enable fullscreen: ${err.message}`);
+        });
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    }
+
+    // Page Load Initialization
+    window.onload = function() {
+      loadState();
+      buildGrid();
+      renderBoard();
+
+      // Keyboard shortcuts
+      document.addEventListener('keydown', function(e) {
+        // Press Escape to close active modal
+        if (e.key === 'Escape') {
+          closeModal('minor-modal');
+          closeModal('top5-modal');
+          closeModal('winner-modal');
+        }
+      });
+
+      // Keep focus on the ticket input on page load
+      const input = document.getElementById('ticket-input');
+      if (input) input.focus();
+    };
+  </script>
+</body>
+</html>
