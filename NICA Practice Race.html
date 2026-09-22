@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NICA Staggered Race Controller</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --card-border: #334155;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --primary: #2563eb;
+      --success: #16a34a;
+      --warning: #eab308;
+      --danger: #dc2626;
+      --accent: #38bdf8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding: 16px; max-width: 900px; margin: 0 auto; }
+
+    h1, h2, h3 { margin-bottom: 12px; }
+    .card { background: var(--card); border: 1px solid var(--card-border); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+
+    button {
+      background: var(--primary); color: white; border: none; padding: 10px 16px; font-size: 1rem;
+      font-weight: 600; border-radius: 8px; cursor: pointer; transition: opacity 0.2s;
+    }
+    button:hover { opacity: 0.9; }
+    button.secondary { background: #475569; }
+    button.success { background: var(--success); }
+    button.danger { background: var(--danger); }
+    button.warning { background: var(--warning); color: #000; }
+    button.sm { padding: 6px 12px; font-size: 0.85rem; }
+    button.lg { padding: 14px 24px; font-size: 1.25rem; width: 100%; }
+
+    textarea, input, select {
+      width: 100%; background: #0f172a; border: 1px solid var(--card-border); color: white;
+      padding: 10px; border-radius: 8px; font-size: 1rem; margin-bottom: 12px;
+    }
+
+    .flex { display: flex; gap: 10px; align-items: center; }
+
+    .preset-bar {
+      display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+      margin-bottom: 8px; padding: 10px; background: #0f172a;
+      border: 1px dashed var(--card-border); border-radius: 8px;
+    }
+
+    .badge {
+      display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 0.8rem;
+      font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .badge-ready { background: #334155; color: #cbd5e1; }
+    .badge-warning { background: var(--warning); color: #000; }
+    .badge-success { background: var(--success); color: #fff; }
+
+    /* Gate Display */
+    .gate-display {
+      text-align: center; padding: 24px 16px; border-radius: 12px; transition: background-color 0.2s ease;
+      background: #090d16; border: 2px solid var(--card-border); margin-bottom: 16px;
+    }
+    .gate-display.flash-yellow { background: #713f12; border-color: var(--warning); }
+    .gate-display.flash-green { background: #14532d; border-color: var(--success); }
+
+    .rider-current { font-size: 2.2rem; font-weight: 800; color: #fff; margin: 6px 0; }
+    .timer-huge { font-size: 3.5rem; font-weight: 900; font-family: monospace; color: var(--accent); }
+    .timer-countdown { font-size: 2.5rem; font-weight: 800; font-family: monospace; color: var(--warning); margin: 4px 0; }
+
+    .label-sub { font-size: 0.85rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
+    .label-next { font-size: 0.95rem; color: var(--muted); font-weight: 600; margin-top: 4px; }
+
+    /* Staging List & Finish Cards */
+    .rider-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px; background: #0f172a; border-radius: 8px; margin-bottom: 8px; border: 1px solid var(--card-border);
+    }
+    .rider-row.scratched { opacity: 0.4; text-decoration: line-through; }
+    .rider-row.finished { border-left: 4px solid var(--success); }
+
+    .leaderboard-table { width: 100%; border-collapse: collapse; text-align: left; }
+    .leaderboard-table th, .leaderboard-table td { padding: 10px; border-bottom: 1px solid var(--card-border); }
+    .leaderboard-table th { color: var(--muted); font-size: 0.85rem; text-transform: uppercase; }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <h1>NICA Staggered Race Controller</h1>
+
+  <!-- STEP 1: SETUP & RIDER ENTRY -->
+  <div id="section-setup" class="card">
+    <h2>1. Race Setup & Roster</h2>
+    
+    <label for="interval-select">Stagger Interval (Seconds between starts):</label>
+    <select id="interval-select">
+      <option value="5">5 Seconds</option>
+      <option value="10" selected>10 Seconds</option>
+      <option value="15">15 Seconds</option>
+      <option value="30">30 Seconds</option>
+      <option value="60">60 Seconds</option>
+    </select>
+
+    <div class="preset-bar">
+      <span style="font-size: 0.85rem; color: var(--muted); font-weight: bold; width: 100%;">Quick Load Default Roster:</span>
+      <button onclick="loadPresetRoster('HS')" class="secondary sm">Load High School Roster</button>
+      <button onclick="loadPresetRoster('MS')" class="secondary sm">Load Middle School Roster</button>
+      <button onclick="loadPresetRoster('CLEAR')" class="danger sm" style="margin-left: auto;">Clear</button>
+    </div>
+
+    <label for="names-input">Rider Names (One rider per line, ordered fastest first):</label>
+    <textarea id="names-input" rows="10" placeholder="Paste rider names here or click a default button above..."></textarea>
+
+    <button onclick="buildRoster()" class="success">Generate Start List &rarr;</button>
+  </div>
+
+  <!-- STEP 2: STAGING & CHECK-IN -->
+  <div id="section-staging" class="card hidden">
+    <h2>2. Rider Check-in & Queue Order</h2>
+    <p style="color: var(--muted); margin-bottom: 12px;">Scratch absent riders or adjust positions. Start delays recalculate automatically.</p>
+    
+    <div id="staging-list"></div>
+
+    <div class="flex" style="margin-top: 16px;">
+      <button onclick="proceedToRaceGate()" class="success" style="font-size: 1.1rem; flex: 1;">Proceed to Race Gate &rarr;</button>
+      <button onclick="showSection('section-setup')" class="secondary">Back to Edit</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: LIVE RACE CONTROL & TIMING -->
+  <div id="section-race" class="hidden">
+    
+    <!-- Big Gate Display -->
+    <div id="gate-display" class="gate-display">
+      <div class="flex" style="justify-content: space-between; margin-bottom: 8px;">
+        <span class="label-sub">Master Race Time</span>
+        <span id="race-status-badge" class="badge badge-ready">STAGED / READY</span>
+      </div>
+      
+      <div id="master-clock" class="timer-huge">00:00.0</div>
+      
+      <div style="margin-top: 16px;" id="gate-status-box">
+        <!-- Injected via JS -->
+      </div>
+    </div>
+
+    <!-- Start Race Action Bar -->
+    <div id="start-control-card" class="card" style="text-align: center;">
+      <button id="start-race-btn" onclick="startRaceCountdown()" class="success lg">🚀 START RACE (10s Countdown)</button>
+    </div>
+
+    <!-- Active Rider Timing List -->
+    <div class="card">
+      <div class="flex" style="justify-content: space-between; margin-bottom: 12px;">
+        <h3>Finish Line Recording</h3>
+        <button onclick="exportCSV()" class="secondary sm">Export CSV</button>
+      </div>
+
+      <div id="race-rider-list"></div>
+    </div>
+
+    <!-- Live Leaderboard -->
+    <div class="card">
+      <h3>Live Leaderboard (Net Race Time)</h3>
+      <table class="leaderboard-table">
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Rider Name</th>
+            <th>Start Delay</th>
+            <th>Net Time</th>
+          </tr>
+        </thead>
+        <tbody id="leaderboard-body">
+          <tr><td colspan="4" style="color: var(--muted);">No riders finished yet.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <button onclick="resetRace()" class="danger sm" style="margin-top: 10px;">Reset Entire Race</button>
+  </div>
+
+  <script>
+    /* =========================================================================
+       DEFAULT ROSTER LISTS - EDIT THESE NAMES AS NEEDED
+       ========================================================================= */
+    const DEFAULT_HS_ROSTER = [
+      `NATHAN DOWNS
+      BRENDAN EICHELBERGER
+      NATE BOONE
+      DALTON POWELL
+      GRACEN NEWNUM
+      GABRIEL ROB
+      BLAKE REED
+      TREVOR HACK
+      HUDSON ATKINS
+      COOPER THOMPSON
+      CHLOE SHARP
+      NOAH FLETCHER
+      AMELIA MILLER
+      AYDEN LAWRENCE
+      ELLIOT ASBURY
+      MOLLY MORRIS
+      MASON HALL
+      JAYCLYNN FOX`;
+
+    const DEFAULT_MS_ROSTER = [
+      "BENNETT SMITH",
+      "CLARA JOHNSON",
+      "DANIEL WILLIAMS",
+      "EVELYN BROWN",
+      "FINN JONES",
+      "GRACE DAVIS",
+      "HENRY MILLER",
+      "ISLA WILSON"
+    ].join('\n');
+
+    /* =========================================================================
+       APPLICATION STATE
+       ========================================================================= */
+    let intervalSec = 10;
+    let riders = []; // { id, name, scratched, startDelay, finishTimestamp, netTime }
+    let raceState = 'setup'; // 'setup', 'staging', 'ready', 'countdown', 'running'
+    let raceStartTime = null; // T0 timestamp
+    let preStartSec = 10;
+    let timerInterval = null;
+    let audioCtx = null;
+    let lastBeepSec = null;
+
+    // Load Default Presets into Textarea
+    function loadPresetRoster(type) {
+      const textarea = document.getElementById('names-input');
+      if (type === 'HS') {
+        textarea.value = DEFAULT_HS_ROSTER;
+      } else if (type === 'MS') {
+        textarea.value = DEFAULT_MS_ROSTER;
+      } else if (type === 'CLEAR') {
+        textarea.value = '';
+      }
+    }
+
+    // Web Audio Synthesizer
+    function initAudio() {
+      if (!audioCtx) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioCtx();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function playAudioTone(freq, duration, type = 'sine') {
+      try {
+        initAudio();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.value = freq;
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {
+        console.log('Audio error or blocked');
+      }
+    }
+
+    function showSection(id) {
+      document.getElementById('section-setup').classList.add('hidden');
+      document.getElementById('section-staging').classList.add('hidden');
+      document.getElementById('section-race').classList.add('hidden');
+      document.getElementById(id).classList.remove('hidden');
+    }
+
+    // 1. Build Roster
+    function buildRoster() {
+      const rawText = document.getElementById('names-input').value;
+      intervalSec = parseInt(document.getElementById('interval-select').value, 10);
+      
+      const lines = rawText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+      if (lines.length === 0) {
+        alert("Please enter or load at least one rider name.");
+        return;
+      }
+
+      riders = lines.map((name, idx) => ({
+        id: idx,
+        name: name,
+        scratched: false,
+        startDelay: 0,
+        finishTimestamp: null,
+        netTime: null
+      }));
+
+      renderStagingList();
+      showSection('section-staging');
+      raceState = 'staging';
+    }
+
+    // 2. Render Staging List
+    function renderStagingList() {
+      const container = document.getElementById('staging-list');
+      container.innerHTML = '';
+
+      let activeCount = 0;
+      riders.forEach((rider, idx) => {
+        if (!rider.scratched) activeCount++;
+        const delay = rider.scratched ? '--' : `${(activeCount - 1) * intervalSec}s delay`;
+
+        const row = document.createElement('div');
+        row.className = `rider-row ${rider.scratched ? 'scratched' : ''}`;
+        row.innerHTML = `
+          <div>
+            <strong>${rider.name}</strong> 
+            <span style="font-size: 0.85rem; color: var(--muted); margin-left: 8px;">(${delay})</span>
+          </div>
+          <div class="flex">
+            <button onclick="moveRider(${idx}, -1)" class="secondary sm" ${idx === 0 ? 'disabled' : ''}>&uarr;</button>
+            <button onclick="moveRider(${idx}, 1)" class="secondary sm" ${idx === riders.length - 1 ? 'disabled' : ''}>&darr;</button>
+            <button onclick="toggleScratch(${idx})" class="${rider.scratched ? 'warning' : 'danger'} sm">
+              ${rider.scratched ? 'Unscratch' : 'Scratch'}
+            </button>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function moveRider(index, direction) {
+      const newIndex = index + direction;
+      if (newIndex < 0 || newIndex >= riders.length) return;
+      const temp = riders[index];
+      riders[index] = riders[newIndex];
+      riders[newIndex] = temp;
+      renderStagingList();
+    }
+
+    function toggleScratch(index) {
+      riders[index].scratched = !riders[index].scratched;
+      renderStagingList();
+    }
+
+    // 3. Proceed to Race Gate (Ready State)
+    function proceedToRaceGate() {
+      riders = riders.filter(r => !r.scratched);
+      riders.forEach((r, idx) => {
+        r.startDelay = idx * intervalSec; // Rider 0 = 0s, Rider 1 = 10s, Rider 2 = 20s
+      });
+
+      raceState = 'ready';
+      showSection('section-race');
+      document.getElementById('start-control-card').classList.remove('hidden');
+      document.getElementById('start-race-btn').classList.remove('hidden');
+      document.getElementById('race-status-badge').innerText = 'STAGED / READY';
+      document.getElementById('race-status-badge').className = 'badge badge-ready';
+
+      renderRaceRiderList();
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = setInterval(updateRaceLoop, 50);
+    }
+
+    // 4. Start Race Countdown (Triggered on Race Page)
+    function startRaceCountdown() {
+      initAudio();
+      const now = Date.now();
+      raceStartTime = now + (preStartSec * 1000); // T0 is 10 seconds in the future
+      raceState = 'countdown';
+      lastBeepSec = null;
+
+      document.getElementById('start-control-card').classList.add('hidden');
+      document.getElementById('race-status-badge').innerText = 'PRE-START COUNTDOWN';
+      document.getElementById('race-status-badge').className = 'badge badge-warning';
+    }
+
+    // Main Race Loop
+    function updateRaceLoop() {
+      const now = Date.now();
+
+      // STATE: READY
+      if (raceState === 'ready') {
+        document.getElementById('master-clock').innerText = "00:00.0";
+        if (riders.length > 0) {
+          document.getElementById('gate-status-box').innerHTML = `
+            <div class="label-sub">ON THE LINE (FIRST RIDER)</div>
+            <div class="rider-current">${riders[0].name}</div>
+            <div class="label-next">NEXT UP: ${riders[1] ? riders[1].name : 'End of Field'}</div>
+          `;
+        }
+        return;
+      }
+
+      // STATE: PRE-START COUNTDOWN
+      if (raceState === 'countdown') {
+        const msRemaining = raceStartTime - now;
+        const secRemaining = msRemaining / 1000;
+
+        document.getElementById('master-clock').innerText = "00:00.0";
+
+        const currentSecInt = Math.ceil(secRemaining);
+        const gateDisplay = document.getElementById('gate-display');
+
+        if (secRemaining <= 3.0 && secRemaining > 0) {
+          gateDisplay.className = 'gate-display flash-yellow';
+        } else {
+          gateDisplay.className = 'gate-display';
+        }
+
+        // Sound Beeps
+        if (currentSecInt !== lastBeepSec && currentSecInt <= 3 && currentSecInt >= 1) {
+          lastBeepSec = currentSecInt;
+          playAudioTone(440, 0.15);
+        }
+
+        // Countdown Reached 0 -> START RACE!
+        if (msRemaining <= 0) {
+          raceState = 'running';
+          playAudioTone(880, 0.4, 'square'); // GO Chime
+          gateDisplay.className = 'gate-display flash-green';
+          document.getElementById('race-status-badge').innerText = 'RACE IN PROGRESS';
+          document.getElementById('race-status-badge').className = 'badge badge-success';
+          lastBeepSec = null;
+          return;
+        }
+
+        document.getElementById('gate-status-box').innerHTML = `
+          <div class="label-sub">ON THE LINE &bull; LAUNCHING IN</div>
+          <div class="timer-countdown">${Math.max(0, secRemaining).toFixed(1)}s</div>
+          <div class="rider-current">${riders[0].name}</div>
+          <div class="label-next">NEXT UP: ${riders[1] ? riders[1].name : 'End of Field'}</div>
+        `;
+        return;
+      }
+
+      // STATE: RUNNING
+      if (raceState === 'running') {
+        const elapsedMs = now - raceStartTime;
+        const elapsedSec = elapsedMs / 1000;
+
+        document.getElementById('master-clock').innerText = formatTime(elapsedMs);
+
+        const numRiders = riders.length;
+        const currentIntervalIndex = Math.floor(elapsedSec / intervalSec);
+
+        const onLineIndex = currentIntervalIndex + 1;
+        const justReleasedIndex = currentIntervalIndex;
+
+        const nextReleaseTime = (currentIntervalIndex + 1) * intervalSec;
+        const secToNextRelease = nextReleaseTime - elapsedSec;
+        const currentSecInt = Math.ceil(secToNextRelease);
+
+        const gateDisplay = document.getElementById('gate-display');
+
+        if (onLineIndex < numRiders) {
+          if (secToNextRelease <= 3.0 && secToNextRelease > 0.1) {
+            gateDisplay.className = 'gate-display flash-yellow';
+          } else if (secToNextRelease <= 0.1 || (intervalSec - secToNextRelease) < 0.6) {
+            gateDisplay.className = 'gate-display flash-green';
+          } else {
+            gateDisplay.className = 'gate-display';
+          }
+
+          // Warning Beeps at 3s, 2s, 1s
+          if (currentSecInt !== lastBeepSec && currentSecInt <= 3 && currentSecInt >= 1) {
+            lastBeepSec = currentSecInt;
+            playAudioTone(440, 0.15);
+          }
+
+          // GO Chime
+          if (secToNextRelease <= 0.08 && secToNextRelease >= -0.1) {
+            if (lastBeepSec !== 0) {
+              lastBeepSec = 0;
+              playAudioTone(880, 0.3, 'square');
+            }
+          }
+
+          document.getElementById('gate-status-box').innerHTML = `
+            <div class="label-sub">ON THE LINE &bull; RELEASING IN ${Math.max(0, secToNextRelease).toFixed(1)}s</div>
+            <div class="rider-current">${riders[onLineIndex].name}</div>
+            <div class="label-next">JUST RELEASED: ${riders[justReleasedIndex] ? riders[justReleasedIndex].name : '--'}</div>
+            <div class="label-next">ON DECK: ${riders[onLineIndex + 1] ? riders[onLineIndex + 1].name : 'End of Field'}</div>
+          `;
+        } else {
+          gateDisplay.className = 'gate-display';
+          document.getElementById('gate-status-box').innerHTML = `
+            <div class="label-sub" style="color: var(--success);">ALL RIDERS RELEASED!</div>
+            <div class="rider-current">Race in Progress</div>
+            <div class="label-next">Last Released: ${riders[numRiders - 1] ? riders[numRiders - 1].name : '--'}</div>
+          `;
+        }
+
+        // Live Elapsed Timers for Active Riders
+        riders.forEach(r => {
+          if (!r.finishTimestamp) {
+            const el = document.getElementById(`live-timer-${r.id}`);
+            if (el) {
+              const rElapsed = elapsedMs - (r.startDelay * 1000);
+              if (rElapsed < 0) {
+                el.innerText = `Starts in ${Math.abs(rElapsed / 1000).toFixed(1)}s`;
+                el.style.color = 'var(--muted)';
+              } else {
+                el.innerText = formatTime(rElapsed);
+                el.style.color = 'var(--accent)';
+              }
+            }
+          }
+        });
+      }
+    }
+
+    // Render Race Controls List
+    function renderRaceRiderList() {
+      const container = document.getElementById('race-rider-list');
+      container.innerHTML = '';
+
+      riders.forEach(r => {
+        const row = document.createElement('div');
+        row.className = `rider-row ${r.finishTimestamp ? 'finished' : ''}`;
+        row.id = `rider-row-${r.id}`;
+        row.innerHTML = `
+          <div>
+            <strong>${r.name}</strong>
+            <div style="font-size: 0.8rem; color: var(--muted);">Start Delay: ${r.startDelay}s</div>
+          </div>
+          <div class="flex">
+            <span id="live-timer-${r.id}" style="font-family: monospace; font-weight: 700;">00:00.0</span>
+            <button id="finish-btn-${r.id}" onclick="recordFinish(${r.id})" class="success sm" ${r.finishTimestamp ? 'disabled' : ''}>
+              ${r.finishTimestamp ? 'FINISHED' : 'FINISH'}
+            </button>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    // Record Rider Finish
+    function recordFinish(riderId) {
+      if (raceState !== 'running') return;
+      const rider = riders.find(r => r.id === riderId);
+      if (!rider || rider.finishTimestamp) return;
+
+      rider.finishTimestamp = Date.now();
+      const grossMs = rider.finishTimestamp - raceStartTime;
+      const netMs = grossMs - (rider.startDelay * 1000);
+      rider.netTime = netMs;
+
+      document.getElementById(`finish-btn-${rider.id}`).disabled = true;
+      document.getElementById(`finish-btn-${rider.id}`).innerText = 'FINISHED';
+      document.getElementById(`live-timer-${rider.id}`).innerText = formatTime(netMs);
+
+      updateLeaderboard();
+    }
+
+    // Update Leaderboard
+    function updateLeaderboard() {
+      const tbody = document.getElementById('leaderboard-body');
+      const finishedRiders = riders.filter(r => r.netTime !== null).sort((a, b) => a.netTime - b.netTime);
+
+      if (finishedRiders.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="color: var(--muted);">No riders finished yet.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = '';
+      finishedRiders.forEach((r, idx) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>#${idx + 1}</strong></td>
+          <td>${r.name}</td>
+          <td>${r.startDelay}s</td>
+          <td style="font-family: monospace; font-weight: 700; color: var(--accent);">${formatTime(r.netTime)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Time Formatter (mm:ss.s)
+    function formatTime(ms) {
+      if (ms < 0) return "00:00.0";
+      const totalSec = Math.floor(ms / 1000);
+      const mins = Math.floor(totalSec / 60);
+      const secs = totalSec % 60;
+      const tenths = Math.floor((ms % 1000) / 100);
+
+      const mStr = String(mins).padStart(2, '0');
+      const sStr = String(secs).padStart(2, '0');
+      return `${mStr}:${sStr}.${tenths}`;
+    }
+
+    // CSV Export
+    function exportCSV() {
+      let csv = "Rank,Name,Start Delay (s),Net Time (ms),Net Time Formatted\n";
+      const sorted = [...riders].sort((a,b) => (a.netTime || Infinity) - (b.netTime || Infinity));
+      
+      sorted.forEach((r, idx) => {
+        const rank = r.netTime ? idx + 1 : "DNF/DNS";
+        const formatted = r.netTime ? formatTime(r.netTime) : "N/A";
+        csv += `"${rank}","${r.name}",${r.startDelay},${r.netTime || ''},"${formatted}"\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.setAttribute('href', url);
+      a.setAttribute('download', `race_results_${new Date().toISOString().slice(0,10)}.csv`);
+      a.click();
+    }
+
+    // Reset Race
+    function resetRace() {
+      if (confirm("Are you sure you want to reset the current race?")) {
+        if (timerInterval) clearInterval(timerInterval);
+        raceState = 'setup';
+        showSection('section-setup');
+      }
+    }
+  </script>
+</body>
+</html>
