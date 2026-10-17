@@ -51,7 +51,7 @@ function updateCountdown() {
   const countdown = document.getElementById('countdown');
   if (!countdown) return;
 
-  const expirationDate = new Date('2026-10-15T15:45:00-0500');
+  const expirationDate = new Date('2026-11-19T15:45:00-0500');
   const difference = expirationDate - new Date();
   
   if (difference <= 0) {
